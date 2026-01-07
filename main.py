@@ -35,11 +35,22 @@ def get_searches(search_ids=None):
 	df = pl.DataFrame(info_list)
 	return df
 
-def get_saved_sets_stats(search_id):
+def get_saved_sets_stats(search_ids, filter_nulls=False, filter_errors=False):
 
-	url = f"{base_url}/saved_sets_stats/{search_id}"
-	resp = session.get(url)
-	df = pl.DataFrame(resp.json())
+	stats_list = []
+	for search_id in search_ids:
+		url = f"{base_url}/saved_sets_stats/{search_id}"
+		resp = session.get(url)
+		stats_list.extend(resp.json())
+
+	df = pl.DataFrame(stats_list)
+
+	if filter_nulls:
+		df = df.filter(~pl.col("Set bit").is_null())
+
+	if filter_errors:
+		df = df.filter(~(pl.col("Saved set") == ""))
+
 	return df
 
 def get_peptide_view(
