@@ -5,10 +5,10 @@ import requests
 server = "bison.med.harvard.edu"
 base_url = f"https://{server}/gfy/www/modules/api/v1"
 
-with open("username", "r") as username_file:
+with open(".username", "r") as username_file:
 	username = username_file.readline()
 
-with open("api_key", "r") as api_key_file:
+with open(".api_key", "r") as api_key_file:
 	api_key = api_key_file.readline()
 
 session = requests.Session()
