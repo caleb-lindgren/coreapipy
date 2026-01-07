@@ -1,0 +1,13 @@
+[build-system]
+requires = [
+	"setuptools >= 80.9.0",
+	"polars >= 1.33.1",
+	"requests >= 2.31.0",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "coreapipy"
+version = "0.0.1"
+description = "Python scripts around the Gygi Lab Core API"
+requires-python = ">=3.11"
