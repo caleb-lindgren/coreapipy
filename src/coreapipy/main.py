@@ -21,7 +21,7 @@ def get_search_info(search_id):
 	search_info = resp.json()
 	return search_info
 
-def get_searches(search_ids=None):
+def get_searches(search_ids=None, list_to_str=True):
 
 	if search_ids is None:
 		url = f"{base_url}/search"
@@ -33,6 +33,12 @@ def get_searches(search_ids=None):
 		for search_id in search_ids
 	]
 	df = pl.DataFrame(info_list)
+
+	if list_to_str:
+		df = df.with_columns(
+			pl.col.saved_set_ids.cast(pl.List(pl.String)).list.join(",")
+		)
+
 	return df
 
 def get_saved_sets_stats(search_ids, filter_nulls=False, filter_errors=False):
