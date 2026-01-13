@@ -4,10 +4,10 @@ import requests
 
 
 with open(".username", "r") as username_file:
-	username = username_file.readline()
+	username = username_file.readline().split("#")[0].strip()
 
 with open(".api_key", "r") as api_key_file:
-	api_key = api_key_file.readline()
+	api_key = api_key_file.readline().split("#")[0].strip()
 
 session = requests.Session()
 session.auth = (username, api_key)
@@ -36,7 +36,6 @@ def get_searches(
 		get_search_info(search_id, server=server)
 		for search_id in search_ids
 	]
-	print(info_list)
 	df = pl.DataFrame(info_list)
 
 	if list_to_str:

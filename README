@@ -1,0 +1,9 @@
+coreapipy - Python scripts for using the Gygi Lab Core API
+---
+Authentication: You need to have two files named .username and .api_key in the
+same directory from which you are calling this library, containing those
+respective pieces of information on the first line. Anything after the first
+line will be ignored, so you can add other login information on subsequent lines
+and change their order in the file as a crude form of identity management. To
+keep track of which keys are which, comments are supported in these files,
+namely, anything after a # character on any line is ignored.
