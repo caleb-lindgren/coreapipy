@@ -1,7 +1,10 @@
 import io
+import json
 import polars as pl
 import requests
 
+default_server = "bison.med.harvard.edu"
+#default_server = "localhost:8443"
 
 with open(".username", "r") as username_file:
 	username = username_file.readline().split("#")[0].strip()
@@ -23,7 +26,7 @@ def get_search_info(search_id, server):
 def get_searches(
 	search_ids=None,
 	list_to_str=True,
-	server="bison.med.harvard.edu",
+	server=default_server,
 ):
 
 	if search_ids is None:		
@@ -49,7 +52,7 @@ def get_saved_sets_stats(
 	search_ids,
 	filter_nulls=False,
 	filter_errors=False,
-	server="bison.med.harvard.edu",
+	server=default_server,
 ):
 
 	stats_list = []
@@ -76,7 +79,7 @@ def get_peptide_view(
 	columns=None,
 	lda=None,
 	schema=None,
-	server="bison.med.harvard.edu",
+	server=default_server,
 ):
 
 	base_url = f"https://{server}/gfy/www/modules/api/v1"
@@ -93,3 +96,49 @@ def get_peptide_view(
 	df = pl.read_csv(io.StringIO(resp.text), separator="\t")
 
 	return df
+
+def get_raws_paths(server=default_server):
+	
+	base_url = f"https://{server}/gfy/www/modules/api/v1"
+	url = f"{base_url}/raw"
+
+	resp = session.get(url)
+	return resp.json()
+
+def post_search(
+	workflow_path,
+	raws,
+	server=default_server,
+):
+
+	with open(workflow_path, "r") as workflow_file:
+		workflow = json.load(workflow_file)
+
+	workflow["items"][0]["parameters"]["raws"] = raws
+
+	workflow_str = json.dumps(workflow["items"])
+	data = {
+		"items": workflow_str,
+	}
+
+	base_url = f"https://{server}/gfy/www/modules/api/v1"
+	url = f"{base_url}/bulk_queue"
+
+	resp = session.post(url, data=data)
+	return resp
+
+def post_raw(path, name, server=default_server):
+
+	data = {
+		"name": name,
+	}
+
+	files = {
+		"file": open(path, "rb"),
+	}
+
+	base_url = f"https://{server}/gfy/www/modules/api/v1"
+	url = f"{base_url}/raw"
+
+	resp = session.post(url, data=data, files=files)
+	return resp
