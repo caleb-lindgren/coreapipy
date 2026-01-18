@@ -15,6 +15,11 @@ with open(".api_key", "r") as api_key_file:
 session = requests.Session()
 session.auth = (username, api_key)
 
+# Always raise for status
+session.hooks = {
+    "response": lambda resp, *args, **kwargs: resp.raise_for_status(),
+}
+
 def get_search_info(search_id, server):
 
 	base_url = f"https://{server}/gfy/www/modules/api/v1"
@@ -142,3 +147,35 @@ def post_raw(path, name, server=default_server):
 
 	resp = session.post(url, data=data, files=files)
 	return resp
+
+def get_search_params(type, path=None, server=default_server):
+
+	params = {
+		"type": type,
+	}
+
+	if path is not None:
+		params["path"] = path
+
+	base_url = f"https://{server}/gfy/www/modules/api/v1"
+	url = f"{base_url}/search_param"
+
+	resp = session.get(url, params=params)
+	return resp.text
+
+def get_job(id, server=default_server):
+
+	base_url = f"https://{server}/gfy/www/modules/api/v1"
+	url = f"{base_url}/job/{id}"
+
+	resp = session.get(url)
+	return resp
+
+def get_protein_map(id, server=default_server):
+
+	base_url = f"https://{server}/gfy/www/modules/api/v1"
+	url = f"{base_url}/protein_assembler/{id}"
+
+	resp = session.get(url)
+	df = pl.read_csv(io.StringIO(resp.text), separator="\t")
+	return df
