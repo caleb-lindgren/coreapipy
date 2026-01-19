@@ -1,4 +1,6 @@
 from .main import (
+	get_fasta,
+	get_fasta_paths,
 	get_job,
 	get_peptide_view,
 	get_protein_map,
@@ -9,5 +11,7 @@ from .main import (
 	get_searches,
 	post_raw,
 	post_search,
+	post_search_params,
+	post_fasta,
 	username,
 )

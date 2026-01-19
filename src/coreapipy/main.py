@@ -16,13 +16,16 @@ session = requests.Session()
 session.auth = (username, api_key)
 
 # Always raise for status
-session.hooks = {
-    "response": lambda resp, *args, **kwargs: resp.raise_for_status(),
-}
+#session.hooks = {
+#    "response": lambda resp, *args, **kwargs: resp.raise_for_status(),
+#}
+
+def make_base_url(server):
+	return f"https://{server}/gfy/www/modules/api/v1"
 
 def get_search_info(search_id, server):
 
-	base_url = f"https://{server}/gfy/www/modules/api/v1"
+	base_url = make_base_url(server)
 	url = f"{base_url}/search/{search_id}"
 	resp = session.get(url)
 	search_info = resp.json()
@@ -35,7 +38,7 @@ def get_searches(
 ):
 
 	if search_ids is None:		
-		base_url = f"https://{server}/gfy/www/modules/api/v1"
+		base_url = make_base_url(server)
 		url = f"{base_url}/search"
 		resp = session.get(url)
 		search_ids = [search["search_id"] for search in resp.json()]
@@ -62,7 +65,7 @@ def get_saved_sets_stats(
 
 	stats_list = []
 	for search_id in search_ids:
-		base_url = f"https://{server}/gfy/www/modules/api/v1"
+		base_url = make_base_url(server)
 		url = f"{base_url}/saved_sets_stats/{search_id}"
 		resp = session.get(url)
 		stats_list.extend(resp.json())
@@ -87,7 +90,7 @@ def get_peptide_view(
 	server=default_server,
 ):
 
-	base_url = f"https://{server}/gfy/www/modules/api/v1"
+	base_url = make_base_url(server)
 	url = f"{base_url}/peptide_view/{search_id}"
 	params = {
 		"type": type,
@@ -104,7 +107,7 @@ def get_peptide_view(
 
 def get_raws_paths(server=default_server):
 	
-	base_url = f"https://{server}/gfy/www/modules/api/v1"
+	base_url = make_base_url(server)
 	url = f"{base_url}/raw"
 
 	resp = session.get(url)
@@ -126,7 +129,7 @@ def post_search(
 		"items": workflow_str,
 	}
 
-	base_url = f"https://{server}/gfy/www/modules/api/v1"
+	base_url = make_base_url(server)
 	url = f"{base_url}/bulk_queue"
 
 	resp = session.post(url, data=data)
@@ -142,7 +145,7 @@ def post_raw(path, name, server=default_server):
 		"file": open(path, "rb"),
 	}
 
-	base_url = f"https://{server}/gfy/www/modules/api/v1"
+	base_url = make_base_url(server)
 	url = f"{base_url}/raw"
 
 	resp = session.post(url, data=data, files=files)
@@ -157,7 +160,7 @@ def get_search_params(type, path=None, server=default_server):
 	if path is not None:
 		params["path"] = path
 
-	base_url = f"https://{server}/gfy/www/modules/api/v1"
+	base_url = make_base_url(server)
 	url = f"{base_url}/search_param"
 
 	resp = session.get(url, params=params)
@@ -165,7 +168,7 @@ def get_search_params(type, path=None, server=default_server):
 
 def get_job(id, server=default_server):
 
-	base_url = f"https://{server}/gfy/www/modules/api/v1"
+	base_url = make_base_url(server)
 	url = f"{base_url}/job/{id}"
 
 	resp = session.get(url)
@@ -173,9 +176,91 @@ def get_job(id, server=default_server):
 
 def get_protein_map(id, server=default_server):
 
-	base_url = f"https://{server}/gfy/www/modules/api/v1"
+	base_url = make_base_url(server)
 	url = f"{base_url}/protein_assembler/{id}"
 
 	resp = session.get(url)
 	df = pl.read_csv(io.StringIO(resp.text), separator="\t")
 	return df
+
+def get_fasta_paths(server=default_server):
+
+	base_url = make_base_url(server)
+	url = f"{base_url}/sequence_database"
+
+	resp = session.get(url)
+
+	return resp.json()
+
+def get_fasta(path, server=default_server):
+
+	params = {
+		"path": path,
+	}
+
+	base_url = make_base_url(server)
+	url = f"{base_url}/sequence_database"
+
+	resp = session.get(url, params=params)
+	return resp.text
+
+def post_fasta(
+	name,
+	path=None,
+	reverse=False,
+	register=False,
+	organism=None,
+	type=None,
+	notes=None,
+	search_algorithm=None,
+	server=default_server,
+):
+
+	data = {
+		"name": name,
+	}
+
+	if reverse:
+		data["reverse"] = reverse
+
+	if register:
+
+		if notes is None:
+			notes = f"Added by {username}"
+
+		data["register"] = register
+		data["organism"] = organism
+		data["type"] = type
+		data["notes"] = notes
+		data["search_algorithm"] = search_algorithm
+
+	files = {}
+
+	if path is not None:
+		files["file"] = open(path, "rb")
+
+	base_url = make_base_url(server)
+	url = f"{base_url}/sequence_database"
+
+	resp = session.post(url, data=data, files=files)
+
+	return resp
+
+def post_search_params(type, name, path, server=default_server):
+
+	data = {
+		"type": type,
+		"name": name,
+	}
+
+	files = {
+		"file": open(path, "rb")
+	}
+
+	base_url = make_base_url(server)
+	url = f"{base_url}/search_param"
+
+	resp = session.post(url, data=data, files=files)
+
+	return resp
+
