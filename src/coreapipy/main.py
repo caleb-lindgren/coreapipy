@@ -16,9 +16,9 @@ session = requests.Session()
 session.auth = (username, api_key)
 
 # Always raise for status
-#session.hooks = {
-#    "response": lambda resp, *args, **kwargs: resp.raise_for_status(),
-#}
+session.hooks = {
+    "response": lambda resp, *args, **kwargs: resp.raise_for_status(),
+}
 
 def make_base_url(server):
 	return f"https://{server}/gfy/www/modules/api/v1"
@@ -114,13 +114,18 @@ def get_raws_paths(server=default_server):
 	return resp.json()
 
 def post_search(
-	workflow_path,
 	raws,
+	workflow=None,
+	workflow_path=None,
 	server=default_server,
 ):
 
-	with open(workflow_path, "r") as workflow_file:
-		workflow = json.load(workflow_file)
+	if workflow is None and workflow_path is None:
+		raise ValueError("Must provide either workflow or workflow path")
+
+	if workflow is None:
+		with open(workflow_path, "r") as workflow_file:
+			workflow = json.load(workflow_file)
 
 	workflow["items"][0]["parameters"]["raws"] = raws
 
@@ -133,7 +138,7 @@ def post_search(
 	url = f"{base_url}/bulk_queue"
 
 	resp = session.post(url, data=data)
-	return resp
+	return resp.json()
 
 def post_raw(path, name, server=default_server):
 
@@ -246,7 +251,7 @@ def post_fasta(
 
 	return resp
 
-def post_search_params(type, name, path, server=default_server):
+def post_search_params(type, name, params_str, server=default_server):
 
 	data = {
 		"type": type,
@@ -254,7 +259,7 @@ def post_search_params(type, name, path, server=default_server):
 	}
 
 	files = {
-		"file": open(path, "rb")
+		"file": params_str,
 	}
 
 	base_url = make_base_url(server)
@@ -262,5 +267,4 @@ def post_search_params(type, name, path, server=default_server):
 
 	resp = session.post(url, data=data, files=files)
 
-	return resp
-
+	return resp.json()
